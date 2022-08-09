@@ -29,8 +29,25 @@ module.exports = {
     },
     signin: async (req, res) => {
         const { email, password } = req.body;
-        const user = await Users.findOne({ email });
-
+        const userExist = await Users.findOne({ email });
+        if (!userExist) {
+            res.json({
+                data: [],
+                error: 'usuario invalido'
+            })
+            return;
+        }
+        const match = await bcrypt.compare(password, userExist.passwordHash);
+        if(!match) {
+            res.json({
+                data: [],
+                error: 'credencial invalida'
+            });
+            return;
+        }
+        res.json({
+            data: userExist
+        });
         /*if(!user) {
             res.json({
                 error: 'Erro ao adicionar um carro'
@@ -42,20 +59,13 @@ module.exports = {
                 data: user
             });
         }*/
-        if (!userExist) {
-            res.json({
-                data: [],
-                error: 'usuario invalido'
-            })
-            return;
-        }
     },
     ranking: async (req, res) => {
         const rankingList = await Users.find({ ranking: { $gt: 0 }, score: { $ne: 00 } })
             .sort({ ranking: 1 })
             .limit(10)
             .select({
-                ranking: 1,
+                ranking: 1,  
                 avatar: 1,
                 nick: 1,
                 score: 1,
